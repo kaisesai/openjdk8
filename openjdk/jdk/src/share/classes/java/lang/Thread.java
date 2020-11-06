@@ -1239,8 +1239,11 @@ class Thread implements Runnable {
             throw new IllegalArgumentException("timeout value is negative");
         }
 
+        // 无限等待
         if (millis == 0) {
+            // 是否存活
             while (isAlive()) {
+                // 睡眠 0 毫秒
                 wait(0);
             }
         } else {

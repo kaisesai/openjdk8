@@ -44,8 +44,11 @@ import sun.reflect.Reflection;
 public final class Unsafe {
 
     private static native void registerNatives();
+    
     static {
+        // 注册本地方法
         registerNatives();
+        // 添加反射方法
         sun.reflect.Reflection.registerMethodsToFilter(Unsafe.class, "getUnsafe");
     }
 

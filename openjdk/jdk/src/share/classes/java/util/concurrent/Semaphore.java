@@ -169,27 +169,50 @@ public class Semaphore implements java.io.Serializable {
         Sync(int permits) {
             setState(permits);
         }
-
+    
+        /**
+         * @return 获取
+         */
         final int getPermits() {
             return getState();
         }
-
+    
+        /**
+         * 非公平的获取共享资源
+         *
+         * @param acquires
+         * @return
+         */
         final int nonfairTryAcquireShared(int acquires) {
+            // 无限循环，是为了保障高并发情况下的操作一定可以成功
             for (;;) {
+                // 获取 volatile 资源
                 int available = getState();
+                // 执行资源减一
                 int remaining = available - acquires;
+                // 如果资源小于 0 则退出，如果资源大于 0 则进行 CAS 设置资源，设置失败的话则继续循环，重复上述操作
                 if (remaining < 0 ||
                     compareAndSetState(available, remaining))
                     return remaining;
             }
         }
-
+    
+        /**
+         * 释放共享资源
+         *
+         * @param releases
+         * @return
+         */
         protected final boolean tryReleaseShared(int releases) {
+            // 无限循环，是为了保障高并发情况下的操作一定可以成功
             for (;;) {
+                // 获取资源
                 int current = getState();
+                // 加资源
                 int next = current + releases;
                 if (next < current) // overflow
                     throw new Error("Maximum permit count exceeded");
+                // CAS 设置资源
                 if (compareAndSetState(current, next))
                     return true;
             }
@@ -216,6 +239,8 @@ public class Semaphore implements java.io.Serializable {
     }
 
     /**
+     * 非公平
+     *
      * NonFair version
      */
     static final class NonfairSync extends Sync {
@@ -224,13 +249,22 @@ public class Semaphore implements java.io.Serializable {
         NonfairSync(int permits) {
             super(permits);
         }
-
+    
+        /**
+         * 以非公平的方式，尝试获取共享资源
+         *
+         * @param acquires
+         * @return
+         */
         protected int tryAcquireShared(int acquires) {
+            // 以非公平的方式来获取资源
             return nonfairTryAcquireShared(acquires);
         }
     }
 
     /**
+     * 公平
+     *
      * Fair version
      */
     static final class FairSync extends Sync {
@@ -239,13 +273,27 @@ public class Semaphore implements java.io.Serializable {
         FairSync(int permits) {
             super(permits);
         }
-
+    
+        /**
+         * 以公平的方式获取共享资源
+         *
+         * @param acquires
+         * @return
+         */
         protected int tryAcquireShared(int acquires) {
+            // 无限循环
             for (;;) {
-                if (hasQueuedPredecessors())
+                // 判断等待队列中有前继者
+                if (hasQueuedPredecessors()) {
+                    // 说明前面有排队的，则直接返回 -1
                     return -1;
+                }
+                // 操作资源
                 int available = getState();
+                // 资源减操作
                 int remaining = available - acquires;
+                // 结果资源小于 0，返回
+                // 结果资源大于等于 0，进行 CAS 设置，操作成功则返回结果资源；CAS 失败则继续重新执行上述操作
                 if (remaining < 0 ||
                     compareAndSetState(available, remaining))
                     return remaining;
@@ -262,6 +310,7 @@ public class Semaphore implements java.io.Serializable {
      *        must occur before any acquires will be granted.
      */
     public Semaphore(int permits) {
+        // 默认创建非公平的同步器
         sync = new NonfairSync(permits);
     }
 
@@ -277,6 +326,7 @@ public class Semaphore implements java.io.Serializable {
      *        else {@code false}
      */
     public Semaphore(int permits, boolean fair) {
+        // 创建公平或者非公平的同步器
         sync = fair ? new FairSync(permits) : new NonfairSync(permits);
     }
 
@@ -309,6 +359,7 @@ public class Semaphore implements java.io.Serializable {
      * @throws InterruptedException if the current thread is interrupted
      */
     public void acquire() throws InterruptedException {
+        // 获取共享模式资源
         sync.acquireSharedInterruptibly(1);
     }
 
@@ -332,6 +383,7 @@ public class Semaphore implements java.io.Serializable {
      * status will be set.
      */
     public void acquireUninterruptibly() {
+        // 以不可中断的方式去获取资源
         sync.acquireShared(1);
     }
 
@@ -423,6 +475,7 @@ public class Semaphore implements java.io.Serializable {
      * in the application.
      */
     public void release() {
+        // 释放资源
         sync.releaseShared(1);
     }
 

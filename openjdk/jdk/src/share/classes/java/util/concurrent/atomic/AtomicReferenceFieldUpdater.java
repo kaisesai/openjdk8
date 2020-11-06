@@ -310,21 +310,27 @@ public abstract class AtomicReferenceFieldUpdater<T,V> {
             final Class<?> fieldClass;
             final int modifiers;
             try {
+                // 获取字段描述
                 field = AccessController.doPrivileged(
                     new PrivilegedExceptionAction<Field>() {
                         public Field run() throws NoSuchFieldException {
                             return tclass.getDeclaredField(fieldName);
                         }
                     });
+                // 字段的修饰符
                 modifiers = field.getModifiers();
+                // 设置允许成员访问
                 sun.reflect.misc.ReflectUtil.ensureMemberAccess(
                     caller, tclass, null, modifiers);
+                // 目标类类加载器
                 ClassLoader cl = tclass.getClassLoader();
+                // 调用方类加载器
                 ClassLoader ccl = caller.getClassLoader();
                 if ((ccl != null) && (ccl != cl) &&
                     ((cl == null) || !isAncestor(cl, ccl))) {
                   sun.reflect.misc.ReflectUtil.checkPackageAccess(tclass);
                 }
+                // 字段类型
                 fieldClass = field.getType();
             } catch (PrivilegedActionException pae) {
                 throw new RuntimeException(pae.getException());
@@ -341,10 +347,12 @@ public abstract class AtomicReferenceFieldUpdater<T,V> {
             this.cclass = (Modifier.isProtected(modifiers) &&
                            caller != tclass) ? caller : null;
             this.tclass = tclass;
-            if (vclass == Object.class)
+            if (vclass == Object.class) {
                 this.vclass = null;
-            else
+            } else {
                 this.vclass = vclass;
+            }
+            // 字段偏移量
             offset = unsafe.objectFieldOffset(field);
         }
 

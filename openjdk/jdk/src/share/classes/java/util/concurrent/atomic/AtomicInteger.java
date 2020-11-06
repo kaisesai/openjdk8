@@ -60,11 +60,13 @@ public class AtomicInteger extends Number implements java.io.Serializable {
 
     static {
         try {
+            // 获取 value 字段在 AtomicInteger 类中的声明的地址偏移量
             valueOffset = unsafe.objectFieldOffset
                 (AtomicInteger.class.getDeclaredField("value"));
         } catch (Exception ex) { throw new Error(ex); }
     }
 
+    // 声明为 volatile 类型的变量
     private volatile int value;
 
     /**

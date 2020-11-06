@@ -900,8 +900,17 @@ public class JavaCompiler {
                 break;
 
             case BY_TODO:
-                while (!todo.isEmpty())
-                    generate(desugar(flow(attribute(todo.remove()))));
+                while (!todo.isEmpty()){
+                    // 标注检查
+                    Env<AttrContext> attribute = attribute(todo.remove());
+                    // 数据与控制流分析
+                    Queue<Env<AttrContext>> flow = flow(attribute);
+                    // 解除语法糖
+                    Queue<Pair<Env<AttrContext>, JCClassDecl>> desugar = desugar(flow);
+                    // 生成字节码文件
+                    generate(desugar);
+                }
+
                 break;
 
             default:

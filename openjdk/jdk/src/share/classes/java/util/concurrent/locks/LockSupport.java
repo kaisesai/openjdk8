@@ -137,8 +137,10 @@ public class LockSupport {
      *        this operation has no effect
      */
     public static void unpark(Thread thread) {
-        if (thread != null)
+        if (thread != null) {
+            // 唤醒线程
             UNSAFE.unpark(thread);
+        }
     }
 
     /**

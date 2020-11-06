@@ -162,6 +162,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         if (++putIndex == items.length)
             putIndex = 0;
         count++;
+        // 非空条件进行唤醒一个消费者
         notEmpty.signal();
     }
 
@@ -181,6 +182,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         count--;
         if (itrs != null)
             itrs.elementDequeued();
+        // 非满的条件进行唤醒生产者
         notFull.signal();
         return x;
     }
@@ -253,8 +255,11 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         if (capacity <= 0)
             throw new IllegalArgumentException();
         this.items = new Object[capacity];
+        // 创建重入锁
         lock = new ReentrantLock(fair);
+        // 创建非空条件
         notEmpty = lock.newCondition();
+        // 创建非满条件
         notFull =  lock.newCondition();
     }
 
@@ -347,10 +352,15 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     public void put(E e) throws InterruptedException {
         checkNotNull(e);
         final ReentrantLock lock = this.lock;
+        // 进行独占模式的加锁
         lock.lockInterruptibly();
         try {
-            while (count == items.length)
+            // 队列中的元素数量等于数组中的数量
+            while (count == items.length) {
+                // 非满的条件（生产者）进行等待
                 notFull.await();
+            }
+            // 把元素放入对了
             enqueue(e);
         } finally {
             lock.unlock();

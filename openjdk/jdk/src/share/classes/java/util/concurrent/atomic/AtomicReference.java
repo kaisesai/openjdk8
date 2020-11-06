@@ -34,6 +34,7 @@
  */
 
 package java.util.concurrent.atomic;
+import java.lang.reflect.Field;
 import java.util.function.UnaryOperator;
 import java.util.function.BinaryOperator;
 import sun.misc.Unsafe;
@@ -54,8 +55,11 @@ public class AtomicReference<V> implements java.io.Serializable {
 
     static {
         try {
+            // 获取 value 属性在 AtomicReference 类中的偏移量
+            // 需要先获取 value 属性在 AtomicReference 类的字段
+            Field valueField = AtomicReference.class.getDeclaredField("value");
             valueOffset = unsafe.objectFieldOffset
-                (AtomicReference.class.getDeclaredField("value"));
+              (valueField);
         } catch (Exception ex) { throw new Error(ex); }
     }
 
